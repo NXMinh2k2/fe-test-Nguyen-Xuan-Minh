@@ -1,14 +1,11 @@
-import { Card, Progress, Statistic } from "antd";
+import { Card, Col, Progress, Row, Statistic } from "antd";
 import { useSelector } from "react-redux";
-import { selectLatestTasks, selectTaskStats } from "../features/tasks/taskSelectors";
-import TaskTable from "./TaskTable";
+import { selectLatestTasks, selectTaskStats } from "../../features/tasks/taskSelectors";
+import RecentTask from "../../components/RecentTask";
 
-const Dashborad = () => {
-
-  const lastest5Task = useSelector(selectLatestTasks)
+export default function Dashboard() {
+ const lastest5Task = useSelector(selectLatestTasks)
   const stats = useSelector(selectTaskStats);
-
-  
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -45,10 +42,15 @@ const Dashborad = () => {
       </Card>
 
       <Card title="Latest 5 Tasks">
-         <TaskTable tasks={lastest5Task} />
+         {/* <TaskTable tasks={lastest5Task} /> */}
+          <Row >
+            <Col span={24} >
+              {lastest5Task.map((task) => (
+                <RecentTask task={task} />
+            ))}
+            </Col>
+          </Row>
       </Card>
     </div>
   );
-};
-
-export default Dashborad;
+}

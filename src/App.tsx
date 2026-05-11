@@ -1,11 +1,11 @@
-import Dashboard from "./components/Dashboard"
+import { RouterProvider } from "react-router-dom";
+
+import { router } from "./routes";
 
 function App() {
 
   return (
-    <>
-      <Dashboard />
-    </>
+   <RouterProvider router={router} />
   )
 }
 

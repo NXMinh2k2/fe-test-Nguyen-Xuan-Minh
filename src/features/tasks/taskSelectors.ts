@@ -49,3 +49,5 @@ export const selectTaskStats = (
     donePercent: getPercent(done),
   };
 };
+
+export const selectAllTasks = (state: RootState) => state.tasks.tasks;
