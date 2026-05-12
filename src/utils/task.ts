@@ -1,17 +1,11 @@
-export const statusColorMap = {
-  todo: "default",
-  in_progress: "processing",
-  done: "success",
-};
+import dayjs from "dayjs";
 
-export const priorityColorMap = {
-  high: "error",
-  medium: "warning",
-  low: "success",
-};
+export const formatDate = (
+  date?: string
+) => {
+  if (!date) return '-';
 
-export const priorityOrder = {
-  low: 1,
-  medium: 2,
-  high: 3,
+  return dayjs(date).format(
+    'DD/MM/YYYY'
+  );
 };

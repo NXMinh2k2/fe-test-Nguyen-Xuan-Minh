@@ -2,13 +2,16 @@ import { Button, DatePicker, Empty, Form, Input, Popconfirm, Select, Space, Tabl
 import type { ColumnsType } from 'antd/es/table';
 import type { Priority, Status, Task } from '../types/tasks';
 import dayjs from 'dayjs';
-import { useEffect, useMemo, useState } from 'react';
-import { priorityColorMap, priorityOrder, } from '../utils/task';
-import { useDispatch, useSelector } from 'react-redux';
+import { useState } from 'react';
+import { useSelector } from 'react-redux';
 import { addTask, deleteManyTasks, deleteTask, resetFilters, setFilter, setPage, updateTask, updateTaskStatus } from '../features/tasks/taskSlice';
 import TaskModal from './TaskModal';
-import debounce from 'lodash/debounce';
-import { selectFilters, selectPagination } from '../features/tasks/taskSelectors';
+import { selectPagination } from '../features/tasks/taskSelectors';
+import StatusSelect from './StatusSelect';
+import PriorityTag from './PriorityTag';
+import { useTaskFilters } from '../hooks/useTaskFilters';
+import { priorityOrder, statusOptions } from '../constants/task';
+import { formatDate } from '../utils/task';
 interface Props {
   tasks: Task[];
 }
@@ -40,43 +43,14 @@ const columns: ColumnsType<Task> = [
     key: 'status',
     width: 150,
     render: (status: Status, record: Task) => (
-     <Select
-        value={status}
-        style={{ width: 120 }}
-        onChange={(value) =>
-          handleStatusChange(
-            record,
-            value
-          )
-        }
-      options={[
-        {
-          value: 'todo',
-          label: (
-            <Tag color="default">
-              Todo
-            </Tag>
-          ),
-        },
-
-        {
-          value: 'in_progress',
-          label: (
-            <Tag color="processing">
-              In Progress
-            </Tag>
-          ),
-        },
-
-        {
-          value: 'done',
-          label: (
-            <Tag color="success">
-              Done
-            </Tag>
-          ),
-        },
-      ]}
+     <StatusSelect
+      value={status}
+      onChange={(value) =>
+        handleStatusChange(
+          record,
+          value
+        )
+      }
     />
     ),
   },
@@ -90,9 +64,9 @@ const columns: ColumnsType<Task> = [
       priorityOrder[a.priority] -
       priorityOrder[b.priority],
     render: (priority: Priority) => (
-      <Tag color={priorityColorMap[priority]}>
-        {priority}
-      </Tag>
+      <PriorityTag
+        priority={priority}
+      />
     ),
   },
 
@@ -111,7 +85,7 @@ const columns: ColumnsType<Task> = [
     sorter: (a, b) =>
       new Date(a.dueDate || "").getTime() -
       new Date(b.dueDate || "").getTime(),
-    render: (dueDate: string) => dayjs(dueDate).format('DD/MM/YYYY'),
+    render: (dueDate: string) => formatDate(dueDate),
   },
 
    {
@@ -169,9 +143,13 @@ const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 const [loading, setLoading] = useState(false);
 
 const [form] = Form.useForm();
-const dispatch = useDispatch();
-const filters = useSelector(selectFilters)
 const pagination = useSelector(selectPagination);
+const {
+  dispatch,
+  filters,
+  searchValue,
+  handleSearchChange,
+} = useTaskFilters();
 
 const handleSubmit = async (values: Task) => {
   setLoading(true);
@@ -211,26 +189,6 @@ const handleStatusChange = (
   );
 };
 
-const debouncedSearch = useMemo(
-  () =>
-    debounce((value: string) => {
-      console.log("Value: ", value);
-      dispatch(
-        setFilter({
-          searchText: value,
-        })
-      );
-    }, 300),
-
-  [dispatch]
-);
-
-useEffect(() => {
-  return () => {
-    debouncedSearch.cancel();
-  };
-}, [debouncedSearch]);
-
   return (
     <>
       <h2 className="text-xl">
@@ -242,9 +200,9 @@ useEffect(() => {
             placeholder="Search task"
             allowClear
             onChange={(e) =>
-              debouncedSearch(e.target.value)
+              handleSearchChange(e.target.value)
             }
-            value={filters.searchText}
+            value={searchValue}
           />
 
           <Select
@@ -259,20 +217,7 @@ useEffect(() => {
               )
             }
             value={filters.status}
-            options={[
-              {
-                value: 'todo',
-                label: 'Todo',
-              },
-              {
-                value: 'in_progress',
-                label: 'In Progress',
-              },
-              {
-                value: 'done',
-                label: 'Done',
-              },
-            ]}
+            options={statusOptions}
           />
 
          <Select
