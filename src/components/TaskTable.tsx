@@ -148,6 +148,7 @@ const {
   dispatch,
   filters,
   searchValue,
+  setSearchValue,
   handleSearchChange,
 } = useTaskFilters();
 
@@ -288,9 +289,11 @@ const handleStatusChange = (
 
           <Button
             type='primary'
-            onClick={() =>
-              dispatch(resetFilters())
-            }
+            onClick={() => {
+              dispatch(resetFilters());
+
+              setSearchValue('');
+            }}
           >
             Reset
           </Button>

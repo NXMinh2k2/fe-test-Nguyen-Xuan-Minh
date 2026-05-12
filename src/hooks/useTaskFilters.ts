@@ -66,6 +66,7 @@ export function useTaskFilters() {
         filters,
 
         searchValue,
+        setSearchValue,
 
         handleSearchChange,
     };
