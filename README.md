@@ -1,77 +1,87 @@
-<<<<<<< HEAD
-# React + TypeScript + Vite
+1. Clone project:  git clone https://github.com/NXMinh2k2/fe-test-Nguyen-Xuan-Minh.git
+2. Cài dependencies: npm install
+3. Chạy project: npm run dev
+4. Test: npm run test
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+- Tech Stack:
+React 18
+TypeScript 5
+Redux Toolkit 2
+Ant Design 5
+Tailwind CSS 3
+React Router DOM
+Dayjs
 
-Currently, two official plugins are available:
+- Tính năng đã làm
+Dashboard:
+Thống kê tổng số task
+Số lượng theo trạng thái:
+Todo
+In Progress
+Done
+Hiển thị task mới nhất
+Progress theo trạng thái
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Task Management:
 
-## React Compiler
+Hiển thị danh sách task bằng Table
+Phân trang (10 items/trang)
+Sort theo:
+Title
+Due Date
+Priority
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+CRUD Task
+Thêm task mới (Modal form)
+Chỉnh sửa task
+Xoá task đơn lẻ
+Xoá nhiều task (bulk delete)
+Confirm trước khi xoá
+Inline Update
+Cập nhật trạng thái trực tiếp trong table (Select inline)
 
-## Expanding the ESLint configuration
+Search & Filter:
+Search theo tiêu đề (debounce 300ms)
+Filter theo:
+Status (multi-select)
+Priority
+Due date range
+Reset toàn bộ filter
+State Management
+Redux Toolkit store
+Selector tối ưu với createSelector
+Tách logic filter vào Redux (không filter ở UI)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Dark Mode
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Custom hook: useTaskFilters
+Component tái sử dụng:
+TaskModal
+StatusSelect
+PriorityTag
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Testing 
+Unit test selector
+Unit test component
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-=======
-# fe-test-Nguy-n-Xu-n-Minh
->>>>>>> c3990c38f446eb54e557af9e218e1c78c5c08b10
+<p align="center">
+  <img src="./public/screenshots/structure project.png" width="900" />
+</p>
+<p align="center">
+  <img src="./public/screenshots/dark-mode.png" width="900" />
+</p>
+<p align="center">
+  <img src="./public/screenshots/dark-mode2.png" width="900" />
+</p>
+<p align="center">
+  <img src="./public/screenshots/light-mode.png" width="900" />
+</p>
+<p align="center">
+  <img src="./public/screenshots/light-mode2.png" width="900" />
+</p>
+<p align="center">
+  <img src="./public/screenshots/modal-edit.png" width="900" />
+</p>
+<p align="center">
+  <img src="./public/screenshots/table.png" width="900" />
+</p>
