@@ -1,9 +1,10 @@
+import { createSelector } from "@reduxjs/toolkit";
 import type { RootState } from "../../store";
 
 export const selectLatestTasks = (
   state: RootState
 ) => {
-  return state.tasks.tasks
+  return state.tasks.items
     .toSorted(
       (a, b) =>
         new Date(b.createdAt).getTime() -
@@ -12,42 +13,138 @@ export const selectLatestTasks = (
     .slice(0, 5);
 };
 
-export const selectTaskStats = (
+export const selectAllTasks = (state: RootState) => state.tasks.items;
+
+export const selectTaskStats =
+  createSelector(
+    [selectAllTasks],
+
+    (tasks) => {
+      const total = tasks.length;
+
+      const todo = tasks.filter((task) => task.status === 'todo').length;
+
+      const inProgress = tasks.filter((task) => task.status === 'in_progress').length;
+
+      const done = tasks.filter((task) => task.status === 'done').length;
+
+      const getPercent = (value: number) => {
+        if (total === 0) return 0;
+
+        return Math.round(
+          (value / total) * 100
+        );
+      };
+
+      return {
+        total,
+        todo,
+        inProgress,
+        done,
+        todoPercent:
+          getPercent(todo),
+        inProgressPercent:
+          getPercent(
+            inProgress
+          ),
+        donePercent:
+          getPercent(done),
+      };
+    }
+  );
+
+export const selectFilters = (
   state: RootState
-) => {
-  const tasks = state.tasks.tasks;
+) => state.tasks.filters;
 
-  const total = tasks.length;
+export const selectPagination = (
+  state: RootState
+) => state.tasks.pagination;
 
-  const todo = tasks.filter(
-    (task) => task.status === "todo"
-  ).length;
+export const selectFilteredTasks =
+  createSelector(
+    [selectAllTasks, selectFilters],
 
-  const inProgress = tasks.filter(
-    (task) => task.status === "in_progress"
-  ).length;
+    (tasks, filters) => {
+      const {
+        searchText,
+        status,
+        priority,
+        dateRange,
+      } = filters;
 
-  const done = tasks.filter(
-    (task) => task.status === "done"
-  ).length;
+      return tasks.filter((task) => {
+        const matchSearch =
+          task.title
+            .toLowerCase()
+            .includes(
+              searchText.toLowerCase()
+            );
 
-  const getPercent = (value: number) => {
-    if (total === 0) return 0;
+        const matchStatus =
+          !status.length ||
+          status.includes(task.status);
 
-    return Math.round((value / total) * 100);
-  };
+        const matchPriority =
+          !priority ||
+          task.priority === priority;
 
-  return {
-    total,
+        const matchDate =
+          !dateRange ||
+          (() => {
+            if (!task.dueDate)
+              return false;
 
-    todo,
-    inProgress,
-    done,
+            const due =
+              new Date(
+                task.dueDate
+              ).getTime();
 
-    todoPercent: getPercent(todo),
-    inProgressPercent: getPercent(inProgress),
-    donePercent: getPercent(done),
-  };
-};
+            const start =
+              new Date(
+                dateRange[0]
+              ).getTime();
 
-export const selectAllTasks = (state: RootState) => state.tasks.tasks;
+            const end =
+              new Date(
+                dateRange[1]
+              ).getTime();
+
+            return (
+              due >= start &&
+              due <= end
+            );
+          })();
+
+        return (
+          matchSearch &&
+          matchStatus &&
+          matchPriority &&
+          matchDate
+        );
+      });
+    }
+  );
+
+export const selectPaginatedTasks =
+  createSelector(
+    [
+      selectFilteredTasks,
+      selectPagination,
+    ],
+
+    (tasks, pagination) => {
+      const {
+        currentPage,
+        pageSize,
+      } = pagination;
+
+      const start =
+        (currentPage - 1) *
+        pageSize;
+
+      const end = start + pageSize;
+
+      return tasks.slice(start, end);
+    }
+  );

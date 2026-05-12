@@ -12,6 +12,7 @@ import type { Task } from '../types/tasks';
 
 interface Props {
   open: boolean;
+  loading: boolean;
   form: FormInstance<Task>;
   onCancel: () => void;
   onFinish: (values: Task) => void;
@@ -19,6 +20,7 @@ interface Props {
 
 export default function TaskModal({
   open,
+  loading,
   form,
   onCancel,
   onFinish,
@@ -30,6 +32,7 @@ export default function TaskModal({
       destroyOnHidden
       onCancel={onCancel}
       onOk={() => form.submit()}
+      confirmLoading={loading}
     >
       <Form
         form={form}

@@ -1,12 +1,14 @@
-import { Button, Form, Popconfirm, Select, Space, Table, Tag } from 'antd';
+import { Button, DatePicker, Empty, Form, Input, Popconfirm, Select, Space, Table, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import type { Priority, Status, Task } from '../types/tasks';
 import dayjs from 'dayjs';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { priorityColorMap, priorityOrder, } from '../utils/task';
-import { useDispatch } from 'react-redux';
-import { addTask, deleteMultipleTasks, deleteTask, updateTask } from '../features/tasks/taskSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { addTask, deleteManyTasks, deleteTask, resetFilters, setFilter, setPage, updateTask, updateTaskStatus } from '../features/tasks/taskSlice';
 import TaskModal from './TaskModal';
+import debounce from 'lodash/debounce';
+import { selectFilters, selectPagination } from '../features/tasks/taskSelectors';
 interface Props {
   tasks: Task[];
 }
@@ -21,7 +23,7 @@ const columns: ColumnsType<Task> = [
   key: "index",
     width: 80,
   render: (_, __, index) =>
-    (currentPage - 1) * pageSize + index + 1,
+    (pagination.currentPage - 1) * pagination.pageSize + index + 1,
 },
   {
     title: 'Title',
@@ -161,97 +163,234 @@ const columns: ColumnsType<Task> = [
   
 ];
 
-const [currentPage, setCurrentPage] = useState(1);
 const [editingTask, setEditingTask] = useState<Task | null>(null);
 const [open, setOpen] = useState(false);
 const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+const [loading, setLoading] = useState(false);
 
-const pageSize = 10;
 const [form] = Form.useForm();
 const dispatch = useDispatch();
+const filters = useSelector(selectFilters)
+const pagination = useSelector(selectPagination);
 
-const handleSubmit = (values: Task) => {
-  setOpen(false);
-  if (editingTask) {
-    dispatch(
-      updateTask({
-        ...editingTask,
-        ...values,
-      })
-    );
-  form.resetFields();
-} else {
-  dispatch(addTask({
-    ...values,
-    id: crypto.randomUUID(),
-  }));
-  form.resetFields();
+const handleSubmit = async (values: Task) => {
+  setLoading(true);
+  try {
+    if (editingTask) {
+      dispatch(
+        updateTask({
+          ...editingTask,
+          ...values,
+        })
+      );
+    } else {
+      dispatch(
+        addTask({
+          ...values,
+          id: crypto.randomUUID(),
+        })
+      );
+    }
+    setOpen(false);
+
+    form.resetFields();
+  } finally {
+    setLoading(false);
   }
-}
+};
 
 const handleStatusChange = (
   task: Task,
   status: Status
 ) => {
   dispatch(
-    updateTask({
+    updateTaskStatus({
       ...task,
       status,
     })
   );
 };
 
+const debouncedSearch = useMemo(
+  () =>
+    debounce((value: string) => {
+      console.log("Value: ", value);
+      dispatch(
+        setFilter({
+          searchText: value,
+        })
+      );
+    }, 300),
+
+  [dispatch]
+);
+
+useEffect(() => {
+  return () => {
+    debouncedSearch.cancel();
+  };
+}, [debouncedSearch]);
+
   return (
     <>
-      <div className="flex items-center justify-between mb-4">
-  <h2 className="text-xl m-0">
-    Task Management
-  </h2>
+      <h2 className="text-xl">
+        Task Management
+      </h2>
 
-  <Space>
-    <Button
-      type="primary"
-      onClick={() => {
-        setEditingTask(null);
+      <Space style={{ marginBottom: 16 }}>
+          <Input.Search
+            placeholder="Search task"
+            allowClear
+            onChange={(e) =>
+              debouncedSearch(e.target.value)
+            }
+            value={filters.searchText}
+          />
 
-        form.resetFields();
+          <Select
+            style={{ width: '150px' }}
+            mode="multiple"
+            placeholder="status"
+            onChange={(value) =>
+              dispatch(
+                setFilter({
+                  status: value,
+                })
+              )
+            }
+            value={filters.status}
+            options={[
+              {
+                value: 'todo',
+                label: 'Todo',
+              },
+              {
+                value: 'in_progress',
+                label: 'In Progress',
+              },
+              {
+                value: 'done',
+                label: 'Done',
+              },
+            ]}
+          />
 
-        setOpen(true);
-      }}
-    >
-      Add Task
-    </Button>
+         <Select
+            style={{ width: '150px' }}
+            allowClear
+            placeholder="Priority"
+            onChange={(value) =>
+              dispatch(
+                setFilter({
+                  priority: value,
+                })
+              )
+            }
+            value={filters.priority}
+            options={[
+              {
+                value: 'low',
 
-    <Button
-      danger
-      type="primary"
-      disabled={!selectedRowKeys.length}
-      onClick={() => {
-        dispatch(
-          deleteMultipleTasks(selectedRowKeys as string[])
-        );
+                label: (
+                  <Tag color="success">
+                    Low
+                  </Tag>
+                ),
+              },
 
-        setSelectedRowKeys([]);
-      }}
-    >
-      Delete Selected
-    </Button>
-  </Space>
-</div>
+              {
+                value: 'medium',
+
+                label: (
+                  <Tag color="warning">
+                    Medium
+                  </Tag>
+                ),
+              },
+
+              {
+                value: 'high',
+
+                label: (
+                  <Tag color="error">
+                    High
+                  </Tag>
+                ),
+              },
+            ]}
+          />
+
+         <DatePicker.RangePicker
+            onChange={(dates) => {
+              dispatch(
+                setFilter({
+                  dateRange: dates
+                    ? [
+                        dates[0]?.toISOString(),
+                        dates[1]?.toISOString(),
+                      ]
+                    : null,
+                })
+              );
+            }}
+            value={filters.dateRange ? 
+              [dayjs(filters.dateRange[0]),
+              dayjs( filters.dateRange[1]),]
+              : null
+  }
+
+          />
+
+          <Button
+            type='primary'
+            onClick={() =>
+              dispatch(resetFilters())
+            }
+          >
+            Reset
+          </Button>
+
+          <Button
+            type="primary"
+            onClick={() => {
+              setEditingTask(null);
+
+              form.resetFields();
+
+              setOpen(true);
+            }}
+          >
+            Add Task
+          </Button>
+
+          <Button
+            danger
+            type="primary"
+            disabled={!selectedRowKeys.length}
+            onClick={() => {
+              dispatch(
+                deleteManyTasks(selectedRowKeys as string[])
+              );
+
+              setSelectedRowKeys([]);
+            }}
+          >
+            Delete Selected
+          </Button>
+      </Space>
 
       <Table
-        showSorterTooltip={{
-          title: "Sắp xếp",
-        }}
+        showSorterTooltip={{ title: "Sắp xếp"}}
         columns={columns}
         dataSource={tasks}
         rowKey="id"
+        loading={loading}
         pagination={{
           showTotal: (total) => `Tổng ${total} tasks`,
-          current: currentPage,
-          pageSize,
+          current: pagination.currentPage,
+          pageSize: pagination.pageSize,
           onChange: (page) =>
-            setCurrentPage(page),
+            dispatch(setPage(page)),
         }}
         rowSelection={{
           selectedRowKeys,
@@ -260,10 +399,18 @@ const handleStatusChange = (
             setSelectedRowKeys(newSelectedRowKeys);
           },
         }}
+        locale={{
+          emptyText: (
+            <Empty
+              description="No tasks found :(("
+            />
+          ),
+  }}
       />
 
     <TaskModal
       open={open}
+      loading={loading}
       form={form}
       onCancel={() => {
         setOpen(false);
@@ -275,3 +422,4 @@ const handleStatusChange = (
     </>
   );
 }
+

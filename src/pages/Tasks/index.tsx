@@ -1,11 +1,12 @@
 import { useSelector } from "react-redux";
 import TaskTable from "../../components/TaskTable";
-import { selectAllTasks } from "../../features/tasks/taskSelectors";
+import { selectFilteredTasks } from "../../features/tasks/taskSelectors";
 
 export default function Tasks() {
-  const allTasks = useSelector(selectAllTasks);
+  const tasks = useSelector(selectFilteredTasks);
+  
 
   return (
-    <TaskTable tasks={allTasks} />
+    <TaskTable tasks={tasks} />
   );
 }

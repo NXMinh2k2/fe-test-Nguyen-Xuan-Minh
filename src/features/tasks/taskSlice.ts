@@ -1,13 +1,19 @@
 import { createSlice } from "@reduxjs/toolkit";
-import type { Task } from "../../types/tasks";
+import type { TasksState } from "../../types/tasks";
 import { mockTasks } from "./mockTask";
 
-interface TaskState {
-  tasks: Task[];
-}
-
-const initialState: TaskState = {
-  tasks: mockTasks,
+const initialState: TasksState = {
+  items: mockTasks,
+  filters: {
+    searchText: '',
+    status: [],
+    priority: null,
+    dateRange: null,
+  },
+  pagination: {
+    currentPage: 1,
+    pageSize: 10,
+  },
 };
 
 const taskSlice = createSlice({
@@ -15,32 +21,69 @@ const taskSlice = createSlice({
   initialState,
   reducers: {
     addTask: (state, action) => {
-      state.tasks.unshift(action.payload);
+      state.items.unshift(action.payload);
     },
 
     updateTask: (state, action) => {
-      const index = state.tasks.findIndex(
+      const index = state.items.findIndex(
         (task) => task.id === action.payload.id
       );
 
       if (index !== -1) {
-        state.tasks[index] = action.payload;
+        state.items[index] = action.payload;
       }
     },
 
     deleteTask: (state, action) => {
-      state.tasks = state.tasks.filter(
+      state.items = state.items.filter(
         (task) => task.id !== action.payload
       );
     },
 
-    deleteMultipleTasks: (state, action ) => {
-      state.tasks = state.tasks.filter(
+    deleteManyTasks: (state, action) => {
+      state.items = state.items.filter(
         (task) =>
           !action.payload.includes(task.id)
       );
     },
+
+    updateTaskStatus: (state, action) => {
+      const { id, status } = action.payload;
+
+      const task = state.items.find(
+        (task) => task.id === id
+      );
+
+      if (task) task.status = status;
+    },
+
+    setFilter: (state, action) => {
+      state.filters = {
+        ...state.filters,
+        ...action.payload,
+      };
+
+      state.pagination.currentPage = 1;
+    },
+
+    resetFilters: (state) => {
+      state.filters = {
+        searchText: '',
+
+        status: [],
+
+        priority: null,
+
+        dateRange: null,
+      };
+    },
+
+    setPage: (state, action) => {
+      state.pagination.currentPage =
+        action.payload;
+    },
   },
+
 });
 
 export default taskSlice.reducer;
@@ -49,5 +92,9 @@ export const {
   addTask,
   updateTask,
   deleteTask,
-  deleteMultipleTasks,
+  deleteManyTasks,
+  updateTaskStatus,
+  setFilter,
+  resetFilters,
+  setPage
 } = taskSlice.actions;
